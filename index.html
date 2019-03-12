@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src='wfc.js'></script>
+    <style>
+      canvas{
+        border:1px solid black;
+        image-rendering: pixelated;}
+    </style>
+  </head>
+  <body>
+    <canvas id="output" width="48" height="48"></canvas>
+    <script>
+        function get_pixel(imgData, x, y) {
+            var index = y*imgData.width+x
+            var i = index*4, d = imgData.data
+            return [d[i],d[i+1],d[i+2],d[i+3]]
+        }
+
+        var colormap = {
+            "0:0:0:255":1, //black
+            "255:255:255:255":0 //white
+        }
+
+        var start = function(id){
+            output = document.getElementById("output")
+            ctx = output.getContext("2d")
+            imgData = ctx.createImageData(48, 48)
+            // input, width, height, N, outputWidth, outputHeight, periodicInput, periodicOutput, symmetry, ground
+            model = new OverlappingModel(id.data, id.width, id.height, 2, 48, 48, true, false, 1, 0) 
+            //seed, limit
+            var success = model.generate(Math.random, 0)
+            model.graphics(imgData.data)
+            ctx.putImageData(imgData, 0, 0)
+                        if (success == false){
+                start(id)
+            } else {
+                var world = []
+                for (var y = 0; y < 48; y++) {
+                var row = []
+                for (var x = 0; x < 48; x++) {
+                    var color = get_pixel(imgData, x, y).join(":")
+                    row.push(colormap[color])
+                }
+                world.push(row)
+                }
+                console.log(world)
+            }
+            console.log("Success: ",success)
+        }
+        var img_url_to_data = function(path, callback){
+            var img = document.createElement("img")
+            img.src = path
+            img.onload = function(e){
+            console.log(this.width, this.height)
+            var c = document.createElement("canvas")
+            c.width = this.width
+            c.height = this.height
+            var ctx = c.getContext("2d")
+            ctx.drawImage(this,0,0)
+            callback(ctx.getImageData(0,0,this.width,this.height))
+        }
+        }
+    </script>
+  </body>
+</html>
